@@ -3,7 +3,8 @@ from selenium.webdriver.common.by import By
 import yaml
 import time 
 
-conf = yaml.load(open('secret.yml'))
+with open('secret.yml', 'r') as file:
+    conf = yaml.safe_load(file)
 username = conf['site']['email']
 password = conf['site']['password']
 url = conf['site']['url']
