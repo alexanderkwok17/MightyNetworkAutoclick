@@ -1,6 +1,8 @@
 import os.path
 import base64
 import re
+import webbrowser
+from datetime import datetime
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
@@ -56,26 +58,38 @@ def extract_message_body(payload):
             return base64.urlsafe_b64decode(data).decode('utf-8')
 
     return None
-import webbrowser
-def find_and_click_link(email_content):
-    # print(email_content)
-    urls = re.findall(r'Download<(\S+\.xlsx)>', email_content)
-    if urls:
-        print(f"Found URL: {urls[0]}")
-        # Example: Open the link in a browser (ensure it's safe to do so)
 
-        webbrowser.open(urls[0])
-    else:
-        print("No URL found in the email.")
+def find_and_click_link(email_content, given_date=None):
+    # Regex to find URLs with the specific pattern including the asset ID
+    urls = re.findall(r'(https://media2-production\.mightynetworks\.com/asset/\S+/Network_Amplify_Australia_members_(\w+)_(\d{1,2})_(\d{4})_(\d{4}).xlsx)', email_content)
+    
+    for url_tuple in urls:
+        # Full URL is in url_tuple[0], date components in url_tuple[1:] 
+        full_url = url_tuple[0]
+        month, day, year, time = url_tuple[1:]
+        
+        # Convert the extracted date components into a datetime object
+        extracted_date = datetime.strptime(f"{year} {month} {day} {time}", "%Y %B %d %H%M")
+        
+        # If given_date is provided, compare the extracted date with the given date
+        if given_date and extracted_date < given_date:
+            print(f"Skipping URL as the extracted date {extracted_date} is  earlier than the given date {given_date}.")
+            continue
+        
+        # Print or open the URL
+        print(f"Clicking on URL: {full_url}")
+        # Uncomment below line to actually open the link in a browser
+        webbrowser.open(full_url)
 
 def main():
     service = authenticate_gmail()
     emails = search_emails(service, "to:alexanderkwok125+zapier@gmail.com")
+    given_date = datetime(2024, 8, 22, 0, 0)
     if emails:
         for email in emails:
             content = get_email_content(service, email['id'])
             if content:
-                find_and_click_link(content)
+                find_and_click_link(content,given_date)
             else:
                 print("No content found in the email.")
 
