@@ -3,6 +3,7 @@ import base64
 import re
 import webbrowser
 from datetime import datetime
+from datetime import datetime, timedelta
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
@@ -84,7 +85,9 @@ def find_and_click_link(email_content, given_date=None):
 def main():
     service = authenticate_gmail()
     emails = search_emails(service, "to:alexanderkwok125+zapier@gmail.com")
-    given_date = datetime(2024, 8, 22, 0, 0)
+    # Define a constant for the current date and time minus 2 hours
+    TWO_HOURS_AGO = datetime.now() - timedelta(hours=2)
+    given_date = TWO_HOURS_AGO 
     if emails:
         for email in emails:
             content = get_email_content(service, email['id'])
